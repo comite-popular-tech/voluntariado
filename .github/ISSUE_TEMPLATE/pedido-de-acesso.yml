@@ -7,9 +7,9 @@ body:
       value: |
         O acesso vai para **a conta do GitHub que abrir esta issue**, então abra com a conta que você vai usar.
 
-        Assim que você enviar, a issue sai daqui e vai para um lugar privado, onde o núcleo da iniciativa avalia o pedido. Por isso, depois de enviar, o link dela vai dar "página não encontrada": é normal.
+        Assim que você enviar, o pedido segue para o núcleo da iniciativa, e esta issue é esvaziada e fechada. É normal.
 
-        Mesmo assim, não escreva telefone, e-mail, endereço nem outro dado pessoal.
+        Não escreva telefone, e-mail, endereço nem outro dado pessoal.
   - type: dropdown
     id: iniciativa
     attributes:

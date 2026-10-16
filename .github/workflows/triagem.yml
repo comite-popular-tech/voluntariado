@@ -1,12 +1,14 @@
 name: triagem
 
-# Os pedidos não ficam aqui: o username de quem pede ficaria público. Assim
-# que a issue é aberta, ela é transferida para o repositório privado onde o
-# acesso é concedido. O nome dele fica num segredo, para não aparecer nos
-# logs, que são públicos.
+# Os pedidos não ficam aqui. Cada issue nova vira uma issue no repositório
+# privado onde o acesso é concedido, e a daqui é esvaziada, fechada e
+# trancada. O nome do repositório de destino fica num segredo, para não
+# aparecer nos logs, que são públicos.
 #
-# Qualquer pessoa dispara este workflow. Por isso o texto da issue nem é
-# lido, e o token do App sai só com permissão de issues.
+# Qualquer pessoa dispara este workflow. Por isso o texto da issue só é lido
+# no script, nunca num run:, e o token do App sai só com permissão de issues.
+# Quem decide se o pedido vale é o repositório de destino, que confere a
+# iniciativa contra a configuração da org.
 on:
   issues:
     types: [opened]
@@ -14,7 +16,7 @@ on:
 permissions: {}
 
 jobs:
-  transferir:
+  encaminhar:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -34,9 +36,30 @@ jobs:
         with:
           github-token: ${{ steps.app.outputs.token }}
           script: |
-            const { repository } = await github.graphql(
-              'query($owner: String!, $name: String!) { repository(owner: $owner, name: $name) { id } }',
-              { owner: context.repo.owner, name: process.env.DESTINO });
-            await github.graphql(
-              'mutation($issue: ID!, $repo: ID!) { transferIssue(input: { issueId: $issue, repositoryId: $repo }) { issue { number } } }',
-              { issue: context.payload.issue.node_id, repo: repository.id });
+            const issue = context.payload.issue;
+            const corpo = issue.body || '';
+            const campo = (titulo) => {
+              const m = corpo.match(new RegExp(`### ${titulo}\\s+([\\s\\S]*?)(?=\\n### |$)`));
+              return m ? m[1].trim() : '';
+            };
+            const iniciativa = (campo('Iniciativa').match(/^[a-z0-9-]+/) || [''])[0];
+            const ajuda = campo('Como você pode ajudar\\? \\(opcional\\)');
+
+            // O usuário vem do autor da issue, não do texto.
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: process.env.DESTINO,
+              title: `Acesso de voluntário: ${issue.user.login}`,
+              body: [
+                '### Iniciativa', '', iniciativa || '(não informada)', '',
+                '### Usuário', '', issue.user.login, '',
+                '### Como pode ajudar', '', ajuda && ajuda !== '_No response_' ? ajuda : '(não informado)',
+              ].join('\n'),
+            });
+
+            const alvo = { ...context.repo, issue_number: issue.number };
+            await github.rest.issues.update({ ...alvo,
+              title: 'Pedido de acesso recebido',
+              body: 'Pedido recebido e encaminhado ao núcleo da iniciativa.',
+              state: 'closed', state_reason: 'completed' });
+            await github.rest.issues.lock({ ...alvo, lock_reason: 'resolved' });
