@@ -1,0 +1,39 @@
+name: Pôr alguém no núcleo (acesso de escrita, precisa de verificação)
+description: Peça para alguém entrar no núcleo de uma frente. O núcleo escreve nos repositórios, então um admin confere antes de aprovar.
+title: "Membro do núcleo"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **O núcleo tem acesso de escrita**: dá push na `main`, publica e lê os segredos dos repositórios da frente. Por isso o pedido só vale depois que um admin da org conferir quem é a pessoa e falar com o núcleo da frente.
+
+        Qualquer pessoa pode abrir este pedido, para si ou para outra pessoa. Assim que você enviar, ele segue para os admins da org, e esta issue é esvaziada e fechada. É normal.
+
+        Não escreva telefone, e-mail, endereço nem outro dado pessoal.
+  - type: input
+    id: usuario
+    attributes:
+      label: Usuário do GitHub
+      description: Quem vai entrar no núcleo. Só o username, sem `@`. Por exemplo, `octocat`.
+    validations:
+      required: true
+  - type: dropdown
+    id: iniciativa
+    attributes:
+      label: Frente
+      description: Em qual núcleo a pessoa entra?
+      options:
+        - agenda (Agenda de eventos)
+        - conteudo (Produção de conteúdo para municípios)
+        - mural (Mural do comitê)
+        - infra-sec (Infraestrutura e segurança)
+        - hub (Hub)
+        - virometro (Virômetro)
+        - barra-cpl (Barra CPL)
+    validations:
+      required: true
+  - type: textarea
+    id: motivo
+    attributes:
+      label: Por que no núcleo? (opcional)
+      description: O que a pessoa já faz na frente e quem do núcleo pode confirmar.

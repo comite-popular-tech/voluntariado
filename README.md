@@ -8,9 +8,11 @@ Quer ajudar numa iniciativa de tecnologia do comitê? **[Peça acesso aqui](../.
 
 Precisa de um repositório para uma iniciativa? **[Peça aqui](../../issues/new?template=novo-repositorio.yml)**. Escolha a iniciativa, ou "nova" para criar uma iniciativa com os times de núcleo e de voluntários vazios.
 
+Alguém precisa entrar no núcleo de uma frente? **[Peça aqui](../../issues/new?template=membro-do-nucleo.yml)**, informando o usuário do GitHub e a frente. Qualquer pessoa pode pedir, para si ou para outra pessoa. O núcleo tem **acesso de escrita** aos repositórios da frente, então um admin da org confere quem é a pessoa, com o núcleo da frente, antes de aprovar.
+
 Não escreva dados pessoais na issue.
 
-Nos dois casos, a issue recebe um comentário com o link do pedido no repositório privado. Se você não consegue abrir o link, é normal: mande-o para quem pode aprovar (o núcleo da iniciativa, num pedido de acesso, ou um admin da org, num repositório novo).
+Em todos os casos, a issue recebe um comentário com o link do pedido no repositório privado. Se você não consegue abrir o link, é normal: mande-o para quem pode aprovar (o núcleo da iniciativa, num pedido de acesso de voluntário, ou um admin da org, num pedido de núcleo ou de repositório novo).
 
 ## Como funciona
 
@@ -23,4 +25,4 @@ Configuração, uma vez:
 - variável `APP_CLIENT_ID` e segredo `APP_CHAVE_PRIVADA`: do App de transferência;
 - segredo `REPOSITORIO_DESTINO`: nome do repositório que recebe os pedidos.
 
-Ao criar ou remover uma iniciativa, atualizem as listas em [`pedido-de-acesso.yml`](.github/ISSUE_TEMPLATE/pedido-de-acesso.yml) e [`novo-repositorio.yml`](.github/ISSUE_TEMPLATE/novo-repositorio.yml) e o [`CODEOWNERS`](.github/CODEOWNERS).
+Ao criar ou remover uma iniciativa, atualizem as listas em [`pedido-de-acesso.yml`](.github/ISSUE_TEMPLATE/pedido-de-acesso.yml), [`membro-do-nucleo.yml`](.github/ISSUE_TEMPLATE/membro-do-nucleo.yml) e [`novo-repositorio.yml`](.github/ISSUE_TEMPLATE/novo-repositorio.yml) e o [`CODEOWNERS`](.github/CODEOWNERS).

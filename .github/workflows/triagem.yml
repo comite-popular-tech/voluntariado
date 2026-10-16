@@ -1,8 +1,9 @@
 name: triagem
 
-# Os pedidos não ficam aqui. Cada issue nova (pedido de acesso ou de
-# repositório novo) vira uma issue no repositório privado onde o pedido é
-# atendido, e a daqui recebe o link dela e é esvaziada, fechada e trancada.
+# Os pedidos não ficam aqui. Cada issue nova (pedido de acesso de voluntário,
+# de entrada no núcleo ou de repositório novo) vira uma issue no repositório
+# privado onde o pedido é atendido, e a daqui recebe o link dela e é
+# esvaziada, fechada e trancada.
 # Quem não consegue abrir o link o repassa a quem pode aprovar.
 #
 # O link mostra o nome do repositório de destino, que é privado. O nome
@@ -52,10 +53,29 @@ jobs:
             const linha = (texto) => texto.replace(/\s+/g, ' ').trim();
             const secao = (titulo, valor) => [`### ${titulo}`, '', valor, ''];
 
-            // O usuário vem do autor da issue, não do texto. Os campos livres
-            // vão por último, para não conseguirem se passar pelos de cima.
+            // Quem pede vem do autor da issue, não do texto. Só o pedido de
+            // núcleo traz um username digitado, porque se pode pedir por outra
+            // pessoa. Os campos livres vão por último, para não conseguirem se
+            // passar pelos de cima, e o formulário se reconhece pelo primeiro
+            // campo, que vem antes de qualquer texto livre.
             let pedido;
-            if (corpo.includes('### Nome do repositório')) {
+            if (corpo.startsWith('### Usuário do GitHub')) {
+              // O username é digitado, então só vale inteiro: um pedaço dele
+              // poderia ser a conta de outra pessoa.
+              const digitado = campo('Usuário do GitHub').replace(/^@/, '');
+              const usuario = /^[A-Za-z0-9-]+$/.test(digitado) ? digitado : '';
+              const iniciativa = slug(campo('Frente'));
+              pedido = {
+                titulo: `Núcleo (acesso de escrita, verificar): ${usuario || '(sem usuário)'} na ${iniciativa || '(sem frente)'}`,
+                aprova: 'um admin da org',
+                corpo: [
+                  ...secao('Iniciativa', iniciativa || '(não informada)'),
+                  ...secao('Usuário', usuario || '(não informado)'),
+                  ...secao('Pedido por', issue.user.login),
+                  ...secao('Motivo', campo('Por que no núcleo? (opcional)') || '(não informado)'),
+                ],
+              };
+            } else if (corpo.startsWith('### Nome do repositório')) {
               const escolhida = slug(campo('Iniciativa'));
               const nova = escolhida === 'nova';
               const iniciativa = nova ? slug(campo('Nome da iniciativa nova')) : escolhida;
