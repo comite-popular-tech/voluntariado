@@ -1,0 +1,32 @@
+name: Quero ser voluntário
+description: Peça acesso de voluntário a uma iniciativa do comitê.
+title: "Acesso de voluntário"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        O acesso vai para **a conta do GitHub que abrir esta issue**, então abra com a conta que você vai usar.
+
+        Assim que você enviar, a issue sai daqui e vai para um lugar privado, onde o núcleo da iniciativa avalia o pedido. Por isso, depois de enviar, o link dela vai dar "página não encontrada": é normal.
+
+        Mesmo assim, não escreva telefone, e-mail, endereço nem outro dado pessoal.
+  - type: dropdown
+    id: iniciativa
+    attributes:
+      label: Iniciativa
+      description: Em qual iniciativa você quer ajudar?
+      options:
+        - agenda (Agenda de eventos)
+        - conteudo (Produção de conteúdo para municípios)
+        - mural (Mural do comitê)
+        - infra-sec (Infraestrutura e segurança)
+        - hub (Hub)
+        - virometro (Virômetro)
+        - barra-cpl (Barra CPL)
+    validations:
+      required: true
+  - type: textarea
+    id: como-ajudar
+    attributes:
+      label: Como você pode ajudar? (opcional)
+      description: Habilidades, disponibilidade, quem te indicou.

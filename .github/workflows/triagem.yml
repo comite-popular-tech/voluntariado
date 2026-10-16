@@ -1,0 +1,42 @@
+name: triagem
+
+# Os pedidos não ficam aqui: o username de quem pede ficaria público. Assim
+# que a issue é aberta, ela é transferida para o repositório privado onde o
+# acesso é concedido. O nome dele fica num segredo, para não aparecer nos
+# logs, que são públicos.
+#
+# Qualquer pessoa dispara este workflow. Por isso o texto da issue nem é
+# lido, e o token do App sai só com permissão de issues.
+on:
+  issues:
+    types: [opened]
+
+permissions: {}
+
+jobs:
+  transferir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Token do App
+        id: app
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_CHAVE_PRIVADA }}
+          owner: ${{ github.repository_owner }}
+          repositories: voluntariado,${{ secrets.REPOSITORIO_DESTINO }}
+          permission-issues: write
+
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          DESTINO: ${{ secrets.REPOSITORIO_DESTINO }}
+        with:
+          github-token: ${{ steps.app.outputs.token }}
+          script: |
+            const { repository } = await github.graphql(
+              'query($owner: String!, $name: String!) { repository(owner: $owner, name: $name) { id } }',
+              { owner: context.repo.owner, name: process.env.DESTINO });
+            await github.graphql(
+              'mutation($issue: ID!, $repo: ID!) { transferIssue(input: { issueId: $issue, repositoryId: $repo }) { issue { number } } }',
+              { issue: context.payload.issue.node_id, repo: repository.id });
