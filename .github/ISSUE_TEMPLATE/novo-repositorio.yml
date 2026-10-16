@@ -1,0 +1,64 @@
+name: Quero um repositório novo
+description: Peça a criação de um repositório numa iniciativa do comitê, ou numa iniciativa nova.
+title: "Repositório novo"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Assim que você enviar, o pedido segue para os admins da org, e esta issue é esvaziada e fechada. É normal.
+
+        Não escreva telefone, e-mail, endereço nem outro dado pessoal.
+  - type: input
+    id: repositorio
+    attributes:
+      label: Nome do repositório
+      description: Letras minúsculas, números e hífens. Por exemplo, `cards-municipais`.
+    validations:
+      required: true
+  - type: input
+    id: descricao
+    attributes:
+      label: Para que serve
+      description: Uma frase. Vira a descrição do repositório.
+    validations:
+      required: true
+  - type: dropdown
+    id: visibilidade
+    attributes:
+      label: Visibilidade
+      options:
+        - private (só a iniciativa vê)
+        - public (qualquer pessoa vê)
+    validations:
+      required: true
+  - type: dropdown
+    id: iniciativa
+    attributes:
+      label: Iniciativa
+      description: De qual iniciativa é o repositório? Se nenhuma servir, escolha "nova" e preencha os dois campos abaixo.
+      options:
+        - agenda (Agenda de eventos)
+        - conteudo (Produção de conteúdo para municípios)
+        - mural (Mural do comitê)
+        - infra-sec (Infraestrutura e segurança)
+        - hub (Hub)
+        - virometro (Virômetro)
+        - barra-cpl (Barra CPL)
+        - nova (preencha abaixo)
+    validations:
+      required: true
+  - type: input
+    id: nova-iniciativa
+    attributes:
+      label: Nome da iniciativa nova
+      description: Só se escolheu "nova". Letras minúsculas, números e hífens. A iniciativa nasce com os times de núcleo e de voluntários vazios.
+  - type: input
+    id: descricao-nova-iniciativa
+    attributes:
+      label: Descrição da iniciativa nova
+      description: Só se escolheu "nova". Uma frase.
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto (opcional)
+      description: Quem vai cuidar do repositório, de onde vem o código, quem pediu.

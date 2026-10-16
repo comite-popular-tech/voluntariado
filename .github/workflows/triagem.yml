@@ -1,14 +1,17 @@
 name: triagem
 
-# Os pedidos não ficam aqui. Cada issue nova vira uma issue no repositório
-# privado onde o acesso é concedido, e a daqui é esvaziada, fechada e
-# trancada. O nome do repositório de destino fica num segredo, para não
-# aparecer nos logs, que são públicos.
+# Os pedidos não ficam aqui. Cada issue nova (pedido de acesso ou de
+# repositório novo) vira uma issue no repositório privado onde o pedido é
+# atendido, e a daqui recebe o link dela e é esvaziada, fechada e trancada.
+# Quem não consegue abrir o link o repassa a quem pode aprovar.
+#
+# O link mostra o nome do repositório de destino, que é privado. O nome
+# continua num segredo para não ficar no código.
 #
 # Qualquer pessoa dispara este workflow. Por isso o texto da issue só é lido
 # no script, nunca num run:, e o token do App sai só com permissão de issues.
-# Quem decide se o pedido vale é o repositório de destino, que confere a
-# iniciativa contra a configuração da org.
+# Quem decide se o pedido vale é o repositório de destino, que confere tudo
+# contra a configuração da org.
 on:
   issues:
     types: [opened]
@@ -39,27 +42,65 @@ jobs:
             const issue = context.payload.issue;
             const corpo = issue.body || '';
             const campo = (titulo) => {
-              const m = corpo.match(new RegExp(`### ${titulo}\\s+([\\s\\S]*?)(?=\\n### |$)`));
-              return m ? m[1].trim() : '';
+              const t = titulo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const m = corpo.match(new RegExp(`### ${t}\\s+([\\s\\S]*?)(?=\\n### |$)`));
+              const valor = m ? m[1].trim() : '';
+              return valor === '_No response_' ? '' : valor;
             };
-            const iniciativa = (campo('Iniciativa').match(/^[a-z0-9-]+/) || [''])[0];
-            const ajuda = campo('Como você pode ajudar\\? \\(opcional\\)');
+            const slug = (texto) => (texto.toLowerCase().match(/^[a-z0-9-]+/) || [''])[0];
+            // Uma linha só, para o texto livre não conseguir abrir um "###".
+            const linha = (texto) => texto.replace(/\s+/g, ' ').trim();
+            const secao = (titulo, valor) => [`### ${titulo}`, '', valor, ''];
 
-            // O usuário vem do autor da issue, não do texto.
-            await github.rest.issues.create({
+            // O usuário vem do autor da issue, não do texto. Os campos livres
+            // vão por último, para não conseguirem se passar pelos de cima.
+            let pedido;
+            if (corpo.includes('### Nome do repositório')) {
+              const escolhida = slug(campo('Iniciativa'));
+              const nova = escolhida === 'nova';
+              const iniciativa = nova ? slug(campo('Nome da iniciativa nova')) : escolhida;
+              const repositorio = slug(campo('Nome do repositório'));
+              pedido = {
+                titulo: `Novo repositório: ${repositorio || '(sem nome)'}`,
+                aprova: 'um admin da org',
+                corpo: [
+                  ...secao('Repositório', repositorio || '(não informado)'),
+                  ...secao('Iniciativa', iniciativa || '(não informada)'),
+                  ...secao('Criar iniciativa', nova ? 'sim' : 'não'),
+                  ...secao('Visibilidade', slug(campo('Visibilidade')) || 'private'),
+                  ...secao('Pedido por', issue.user.login),
+                  ...secao('Descrição do repositório', linha(campo('Para que serve')) || '(não informada)'),
+                  ...secao('Descrição da iniciativa', nova ? linha(campo('Descrição da iniciativa nova')) || '(não informada)' : '(já existe)'),
+                  ...secao('Contexto', campo('Contexto (opcional)') || '(não informado)'),
+                ],
+              };
+            } else {
+              pedido = {
+                titulo: `Acesso de voluntário: ${issue.user.login}`,
+                aprova: 'alguém do núcleo da iniciativa',
+                corpo: [
+                  ...secao('Iniciativa', slug(campo('Iniciativa')) || '(não informada)'),
+                  ...secao('Usuário', issue.user.login),
+                  ...secao('Como pode ajudar', campo('Como você pode ajudar? (opcional)') || '(não informado)'),
+                ],
+              };
+            }
+
+            const { data: criada } = await github.rest.issues.create({
               owner: context.repo.owner,
               repo: process.env.DESTINO,
-              title: `Acesso de voluntário: ${issue.user.login}`,
-              body: [
-                '### Iniciativa', '', iniciativa || '(não informada)', '',
-                '### Usuário', '', issue.user.login, '',
-                '### Como pode ajudar', '', ajuda && ajuda !== '_No response_' ? ajuda : '(não informado)',
-              ].join('\n'),
+              title: pedido.titulo,
+              body: pedido.corpo.join('\n').trim(),
             });
 
             const alvo = { ...context.repo, issue_number: issue.number };
+            await github.rest.issues.createComment({ ...alvo, body: [
+              `Pedido encaminhado: ${criada.html_url}`,
+              '',
+              `Esse link só abre para os núcleos e os admins da org. Se você não consegue abrir, é normal: copie e mande para ${pedido.aprova}, que pode aprovar.`,
+            ].join('\n') });
             await github.rest.issues.update({ ...alvo,
-              title: 'Pedido de acesso recebido',
-              body: 'Pedido recebido e encaminhado ao núcleo da iniciativa.',
+              title: 'Pedido recebido',
+              body: 'Pedido recebido e encaminhado. O link está no comentário abaixo.',
               state: 'closed', state_reason: 'completed' });
             await github.rest.issues.lock({ ...alvo, lock_reason: 'resolved' });
